@@ -1,0 +1,73 @@
+name: Archive known-good Cubic 108
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Archive Cubic 108
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          FILE='cubic_2026.08.108-release~202608210019~ubuntu24.04.1_all.deb'
+          URL='https://ppa.launchpadcontent.net/cubic-wizard/release/ubuntu/pool/main/c/cubic/'"${FILE}"
+          DIR='packages/cubic/2026.08.108'
+
+          mkdir -p "${DIR}"
+
+          if [[ ! -f "${DIR}/${FILE}" ]]; then
+            curl -fL --retry 3 --connect-timeout 20 "${URL}" -o "${DIR}/${FILE}"
+          fi
+
+          (
+            cd "${DIR}"
+            sha256sum "${FILE}" > SHA256SUMS.txt
+          )
+
+          cat > "${DIR}/README.md" <<'EOF'
+# Cubic 2026.08.108 — known-good Ubuntu 24.04 package
+
+Archived package:
+
+`cubic_2026.08.108-release~202608210019~ubuntu24.04.1_all.deb`
+
+This version was retained after Cubic 2026.08.109 failed during the
+"Copy important files from the original disk image" stage while 2026.08.108
+successfully passed the same operation on the same machine/workflow.
+
+Source: Cubic release PPA for Ubuntu 24.04.
+
+Install/downgrade example:
+
+```bash
+sudo apt install --allow-downgrades ./cubic_2026.08.108-release~202608210019~ubuntu24.04.1_all.deb
+sudo apt-mark hold cubic
+```
+
+Verify with:
+
+```bash
+sha256sum -c SHA256SUMS.txt
+```
+EOF
+
+          if git diff --quiet -- "${DIR}" && git ls-files --error-unmatch "${DIR}/${FILE}" >/dev/null 2>&1; then
+            echo 'Archive already current.'
+            exit 0
+          fi
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "${DIR}"
+          git commit -m 'Archive known-good Cubic 2026.08.108 package'
+          git push
