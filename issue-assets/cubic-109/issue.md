@@ -52,9 +52,11 @@ Error: Unable to copy files from the original disk image.
 ## Cubic information
 
 ### Failing version
+
 `2026.08.109-release~202608290311~ubuntu24.04.1`
 
 ### Known-good version
+
 `2026.08.108-release~202608210019~ubuntu24.04.1`
 
 ## Screenshot
