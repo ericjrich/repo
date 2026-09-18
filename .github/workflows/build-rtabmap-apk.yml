@@ -1,0 +1,79 @@
+name: Build RTAB-Map Android APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/build-rtabmap-apk.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Extract and sign RTAB-Map Android30 APK
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          IMAGE="introlab3it/rtabmap:android30"
+          OUT="$GITHUB_WORKSPACE/.rtabmap-apk-build"
+          DEST="$GITHUB_WORKSPACE/packages/apk"
+          mkdir -p "$OUT" "$DEST"
+
+          docker pull "$IMAGE"
+          IMAGE_DIGEST="$(docker image inspect --format='{{index .RepoDigests 0}}' "$IMAGE")"
+
+          CID="$(docker create "$IMAGE")"
+          trap 'docker rm -f "$CID" >/dev/null 2>&1 || true' EXIT
+
+          docker cp "$CID:/root/rtabmap-tango/build/arm64-v8a/app/android/bin/RTABMap-debug.apk" "$OUT/RTABMap-debug.apk"
+          docker cp "$CID:/root/.android/debug.keystore" "$OUT/debug.keystore"
+
+          docker rm "$CID"
+          trap - EXIT
+
+          docker run --rm             -v "$OUT:/out"             "$IMAGE"             /opt/android-sdk/build-tools/30.0.3/apksigner sign             --ks /out/debug.keystore             --ks-pass pass:android             --out /out/RTABMap-android30-arcore.apk             /out/RTABMap-debug.apk
+
+          docker run --rm             -v "$OUT:/out"             "$IMAGE"             /opt/android-sdk/build-tools/30.0.3/apksigner verify             --verbose --print-certs             /out/RTABMap-android30-arcore.apk             | tee "$OUT/apksigner-verify.txt"
+
+          VERSION_INFO="$(docker run --rm             -v "$OUT:/out"             "$IMAGE"             /opt/android-sdk/build-tools/30.0.3/aapt dump badging             /out/RTABMap-android30-arcore.apk             | head -n 1)"
+
+          cp "$OUT/RTABMap-android30-arcore.apk" "$DEST/RTABMap-android30-arcore.apk"
+          sha256sum "$DEST/RTABMap-android30-arcore.apk" > "$DEST/RTABMap-android30-arcore.sha256"
+
+          {
+            echo "RTAB-Map Android ARCore APK"
+            echo
+            echo "Source project: https://github.com/introlab/rtabmap"
+            echo "Official build image: $IMAGE"
+            echo "Image digest: $IMAGE_DIGEST"
+            echo "Build date (UTC): $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            echo "Package info: $VERSION_INFO"
+            echo
+            echo "Signing:"
+            echo "  Signed with the standard Android debug keystore shipped in the official RTAB-Map android30 image."
+            echo "  This is suitable for sideloading/testing and is not a Play Store release signature."
+            echo
+            echo "Verification:"
+            sed 's/^/  /' "$OUT/apksigner-verify.txt"
+          } > "$DEST/RTABMap-android30-arcore-build.txt"
+
+      - name: Commit APK package
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add packages/apk/RTABMap-android30-arcore.apk                   packages/apk/RTABMap-android30-arcore.sha256                   packages/apk/RTABMap-android30-arcore-build.txt
+          if git diff --cached --quiet; then
+            echo "No package changes to commit."
+            exit 0
+          fi
+          git commit -m "Add RTAB-Map Android APK [skip ci]"
+          git push
