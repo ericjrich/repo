@@ -1,0 +1,29 @@
+RTAB-Map Android ARCore APK
+
+Source project: https://github.com/introlab/rtabmap
+Official build image: introlab3it/rtabmap:android30
+Image digest: introlab3it/rtabmap@sha256:f2866a11c864cbc335fe6c08e445c448552d1e50470964c9a1a9d4e8ebdb67bf
+Build date (UTC): 2026-09-18T18:03:15Z
+Package info: package: name='com.introlab.rtabmap' versionCode='72' versionName='0.23.11' compileSdkVersion='30' compileSdkVersionCodename='11'
+
+Signing:
+  Signed with the standard Android debug keystore shipped in the official RTAB-Map android30 image.
+  This is suitable for sideloading/testing and is not a Play Store release signature.
+
+Verification:
+  Verifies
+  Verified using v1 scheme (JAR signing): false
+  Verified using v2 scheme (APK Signature Scheme v2): false
+  Verified using v3 scheme (APK Signature Scheme v3): true
+  Verified using v4 scheme (APK Signature Scheme v4): false
+  Verified for SourceStamp: false
+  Number of signers: 1
+  Signer #1 certificate DN: CN=Android Debug, O=Android, C=US
+  Signer #1 certificate SHA-256 digest: 5de7d1e10a09c895d90d7c2e2d3fb169f0737361c465fcaa28928b3d78101157
+  Signer #1 certificate SHA-1 digest: 034162e662927de1ef1aae9f5872ea74d815079a
+  Signer #1 certificate MD5 digest: f10959ed2a53c127c3e1ed55ee2c0918
+  Signer #1 key algorithm: RSA
+  Signer #1 key size (bits): 2048
+  Signer #1 public key SHA-256 digest: e5c251451e124bef61ffcfc7e6f27b049270819b6391c6f0f2a24671f297fc04
+  Signer #1 public key SHA-1 digest: f26ee93aa8de67e856167bcbf99cc13106afd091
+  Signer #1 public key MD5 digest: 243f816dc43f6f0ffc98ab363e59afaf
